@@ -1,5 +1,5 @@
 # T2T Marmoset
-Code &amp; Additional Materials from the T2T Marmoset Project (Hebbar et al. 2026)
+Code &amp; Additional Materials from the T2T Marmoset Project (Hebbar et al. 2026). Alignments and other data are available here: https://public.gi.ucsc.edu/~pnhebbar/marmoset/sharing/
 
 ### Centromere Analysis
 
