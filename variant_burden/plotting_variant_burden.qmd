@@ -1,0 +1,145 @@
+---
+title: "SNP annotation and variant burden visualization"
+author: "Sonal Kumar"
+date: 2026-03-05
+format: 
+  html:
+    df-print: kable
+toc: true
+colorlinks: true
+code-fold: false
+
+editor: visual
+execute:
+  warning: false
+  message: false
+  freeze: auto
+---
+
+# SNP Annotation with SnpEff
+
+## Loading libraries
+
+```{r}
+#| label: loading libraries
+#| include: true
+
+library(tidyverse)
+library(RColorBrewer)
+library(readr)
+library(patchwork)
+```
+
+# Reading in and plotting annotation results
+
+```{r}
+#| label: read and prepare input
+#| include: true
+
+#reading in AD loci.
+target_gene_list <- read_tsv("./gene_loci_targets.txt", col_names = F) #list of 81 genes, including 76 from Bellenguez et al. (2022), and a few extras: MAPT, PSEN1, PSEN2, SNCA, TARDBP.
+colnames(target_gene_list) <- "GeneName"
+
+#reading in SnpEff annotation results.
+#SnpEff provides a gene-level annotation output, which is a TSV file (disregarding the header). This header is removed prior to reading into R.
+snpeff_genes <- read_tsv("./snpEff_genes_R_input.txt", col_names = TRUE)
+
+snpeff_genes <- snpeff_genes %>%
+  dplyr::rename(GeneName = `#GeneName`)
+
+#get summary stats table per gene.
+snpeff_genes_summary <- snpeff_genes %>%
+  group_by(GeneName) %>%
+  summarise(across(where(is.numeric), ~max(.x, na.rm = TRUE)), .groups = "drop")
+
+#get ONLY AD loci considered for analysis.
+AD_loci_snpeff <- inner_join(target_gene_list, snpeff_genes_summary, by = "GeneName") #same as supplementary table S8. VARIANT_BURDEN.
+
+#preparing dataframes for variant effects and impacts.
+AD_loci_effects <- AD_loci_snpeff %>%
+  dplyr::select(-c("variants_impact_HIGH":"variants_impact_MODIFIER", "variants_effect_intron_variant")) %>%
+  mutate(total = rowSums(across(where(is.numeric)), na.rm = TRUE))
+
+AD_loci_impacts <- AD_loci_snpeff %>%
+  dplyr::select(c("GeneName":"variants_impact_MODERATE")) %>%
+  mutate(total = rowSums(across(where(is.numeric)), na.rm = TRUE))
+```
+
+```{r}
+#| label: plotting stacked bar plots
+#| include: true
+
+#predicted variant effects.
+plot_df_variant_effects <- AD_loci_snpeff %>%
+  dplyr::select(-c("variants_impact_HIGH":"variants_impact_MODIFIER")) %>%
+  pivot_longer(cols = where(is.numeric), #considering all effect/count columns.
+               names_to = "effect",
+               values_to = "count") %>%
+  filter(effect != "variants_effect_intron_variant") %>%
+  filter(count > 0) %>% #dropping any categories with 0 annotations.
+  mutate(effect = effect %>%
+           str_remove("^variants_effect_") %>% #removing prefix of category type.
+           str_replace_all("_", " ") %>% #replacing "_" with spaces for aesthetics.
+           str_to_title() %>% #capitalizing each word.
+           str_replace_all("Utr", "UTR")) #formatting case.
+
+my_palette <- colorRampPalette(brewer.pal(9, "Paired"))(18) #extended color palette with 18 options.
+
+barplot_gene_wise_effects <- ggplot(plot_df_variant_effects, aes(x = GeneName, y = count, fill = effect)) +
+  geom_bar(stat = "identity") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        axis.title = element_text(size = 14, face = "bold"),
+        axis.text = element_text(size = 12),
+        legend.title = element_text(size = 14, face = "bold"),
+        legend.text = element_text(size = 12),
+        legend.justification = "left") +
+  labs(y = "Number of variants",
+       x = "", #"AD-associated gene loci",
+       fill = "Predicted variant effect") +
+  scale_fill_manual(values = my_palette)
+
+#predicted variant impacts.
+plot_df_variant_impacts <- AD_loci_snpeff %>%
+  dplyr::select(c("GeneName":"variants_impact_MODIFIER")) %>%
+  pivot_longer(cols = where(is.numeric), #considering all effect/count columns.
+               names_to = "impact",
+               values_to = "count") %>%
+  mutate(impact = impact %>%
+           str_remove("^variants_impact_") %>% #removing prefix of impact type.
+           str_replace_all("_", " ") %>%        
+           str_to_title()) %>%                   
+  filter(impact != "Modifier") %>%
+  mutate(impact = factor(impact, levels = c("High", "Moderate", "Low")))
+
+barplot_gene_wise_impacts <- ggplot(plot_df_variant_impacts, aes(x = GeneName, y = count, fill = impact)) +
+  geom_bar(stat = "identity") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        axis.title = element_text(size = 14, face = "bold"),
+        axis.text = element_text(size = 12),
+        legend.title = element_text(size = 14, face = "bold"),
+        legend.text = element_text(size = 12),
+        legend.justification = "left") +
+  labs(y = "Number of variants",
+       x = "AD-associated gene loci",
+       fill = "Predicted variant impact") +
+  scale_fill_manual(values = c("#E31A1C", "#FF7F00", "#FDBF6F")) #chose 3 colors from my_palette as initialized above.
+
+#putting the final figure together.
+plot <- barplot_gene_wise_effects + barplot_gene_wise_impacts + plot_layout(nrow = 2, heights = c(2, 1)) 
+plot <- plot + plot_annotation(tag_levels = 'A') & 
+  theme(plot.tag.position = "topleft", 
+        plot.tag = element_text(face = "bold", size = 16))
+
+plot
+#saving the resulting plot.
+#ggsave(plot, file = "./combined_variant_annotations.pdf", device = "pdf", dpi = 600, height = 10, width = 20)
+```
+
+```{r}
+#| label: session details
+#| include: true
+
+sessionInfo()
+```
