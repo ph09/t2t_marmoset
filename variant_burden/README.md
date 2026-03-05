@@ -8,7 +8,7 @@ SnpEff build was used to construct a custom genome database for annotation using
 java -Xms4g -Xmx48g -jar ./snpEff.jar build -gtf22 -noCheckCds -noCheckProtein -v caljac240 
 ```
 
-A bed file was constructed by extracting genomic coordinates from 'gene' entries in the .gtf file [81 genes](./gene_loci_targets.txt) considered based on their association with Alzheimer’s disease and related pathology (Bellenguez et al., 2022, others). 
+A bed file was constructed by extracting genomic coordinates from 'gene' entries in the .gtf file for [81 genes](./gene_loci_targets.txt) considered based on their association with Alzheimer’s disease and related pathology (Bellenguez et al., 2022, others). 
 This bed file was used to extract variants at loci of interest from the joint VCF file using bcftools view (bcftools version 1.9; using htslib 1.9). This subset of variants was further annotated with SnpEff. 
 
 ```{bash}
