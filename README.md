@@ -2,7 +2,9 @@
 Code &amp; Additional Materials from the T2T Marmoset Project (Hebbar et al. 2026). 
 
 v1.1 assemblies are available through this link until available through GenBank: https://public.gi.ucsc.edu/~pnhebbar/marmoset/v1.1/
+
 These have some fixed gaps and extended telomeres. 
+
 Alignments and other data are available here: https://public.gi.ucsc.edu/~pnhebbar/marmoset/sharing/
 
 Connect to UCSC Genome Browser using this: https://public.gi.ucsc.edu/~pnhebbar/marmoset/assemblyHub/hub.txt
