@@ -5,9 +5,7 @@ v1.1 assemblies are available through this link until available through GenBank:
 
 These have some fixed gaps and extended telomeres. 
 
-Alignments and other data are available here: https://public.gi.ucsc.edu/~pnhebbar/marmoset/sharing/
-
-Connect to UCSC Genome Browser using this: https://public.gi.ucsc.edu/~pnhebbar/marmoset/assemblyHub/hub.txt
+All alignment & annotation files, along with UCSC Browser Hubs are available through: https://public.gi.ucsc.edu/~pnhebbar/marmoset/
 
 ### Centromere Analysis
 
